@@ -28,23 +28,25 @@ class CMake (object):
         
         core = ''
         
-        if 'STM32F0' in self.project['chip']:
+        if '32F0' in self.project['chip']:
             core = '-mcpu=cortex-m0'
-        elif 'STM32F1' in self.project['chip']:
-            core = '-mcpu=cortex-m3'
-        elif 'STM32F2' in self.project['chip']:
-            core = '-mcpu=cortex-m3'
-        elif 'STM32F3' in self.project['chip']:
-            core = '-mcpu=cortex-m4'
-        elif 'STM32F4' in self.project['chip']:
-            core = '-mcpu=cortex-m4'
-        elif 'STM32F7' in self.project['chip']:
-            core = '-mcpu=cortex-m7'
-        elif 'STM32L0' in self.project['chip']:
+        elif '32G0' in self.project['chip']:
             core = '-mcpu=cortex-m0plus'
-        elif 'STM32L1' in self.project['chip']:
+        elif '32F1' in self.project['chip']:
             core = '-mcpu=cortex-m3'
-        elif 'STM32L4' in self.project['chip']:
+        elif '32F2' in self.project['chip']:
+            core = '-mcpu=cortex-m3'
+        elif '32F3' in self.project['chip']:
+            core = '-mcpu=cortex-m4'
+        elif '32F4' in self.project['chip']:
+            core = '-mcpu=cortex-m4'
+        elif '32F7' in self.project['chip']:
+            core = '-mcpu=cortex-m7'
+        elif '32L0' in self.project['chip']:
+            core = '-mcpu=cortex-m0plus'
+        elif '32L1' in self.project['chip']:
+            core = '-mcpu=cortex-m3'
+        elif '32L4' in self.project['chip']:
             core = '-mcpu=cortex-m4'
             
         cmake['version'] = '3.1'
@@ -72,12 +74,12 @@ class CMake (object):
 		
         cmake['cxx'] = 'false'
         
-        cmake['c_flags'] = '-g -Wextra -Wshadow -Wimplicit-function-declaration -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes -fno-common -ffunction-sections -fdata-sections -MD -Wall -Wundef -mthumb ' + core + ' ' + fpu
+        cmake['c_flags'] = '-Og -Wextra -Wshadow -Wimplicit-function-declaration -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes -fno-common -ffunction-sections -fdata-sections -MD -Wall -mthumb ' + core + ' ' + fpu
 
-        cmake['cxx_flags'] = '-Wextra -Wshadow -Wredundant-decls  -Weffc++ -fno-common -ffunction-sections -fdata-sections -MD -Wall -Wundef -mthumb ' + core + ' ' + fpu
+        cmake['cxx_flags'] = '-Wextra -Wshadow -Wredundant-decls  -Weffc++ -fno-common -ffunction-sections -fdata-sections -MD -Wall  -mthumb ' + core + ' ' + fpu
  
-        cmake['asm_flags'] = '-g -mthumb ' + core + ' ' + fpu #+ ' -x assembler-with-cpp'
-        cmake['linker_flags'] = '-g -Wl,--gc-sections -Wl,-Map=' + cmake['project'] + '.map -mthumb ' + core + ' ' + fpu
+        cmake['asm_flags'] = '-Og -mthumb ' + core + ' ' + fpu #+ ' -x assembler-with-cpp'
+        cmake['linker_flags'] = '-Og -Wl,--gc-sections -Wl,-Map=' + cmake['project'] + '.map -mthumb ' + core + ' ' + fpu + '-lc -lm' 
         cmake['linker_script'] = 'STM32FLASH.ld'
         cmake['linker_path'] = ''  
    

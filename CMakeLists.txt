@@ -1,5 +1,8 @@
 # CMake minimum version
 cmake_minimum_required (VERSION {{ cmake.version }})
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
 # Project Infomation
 project( {{ cmake.project }} )
@@ -19,9 +22,12 @@ include_directories ({{ inc }})
 {% endfor %}
 
 # The need build source path and build all files
+set (SRC_STARTUP startup_stm32g030xx.s)
+set (SRC_FILES
 {% for src in cmake.files %}
-set ({{ src.var }} {{ src.path }})
+    {{ src.path }}
 {% endfor %}
+)
 
 {% for as in cmake.ass %}
 set_source_files_properties({{ as.path }} PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
@@ -48,7 +54,7 @@ set (CMAKE_ASM_FLAGS "{{ cmake.asm_flags }}" CACHE INTERNAL "asm compiler flags"
 
 # LDFLAGS
 set (CMAKE_EXE_LINKER_FLAGS "{{ cmake.linker_flags }}" CACHE INTERNAL "executable linker flags")
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T ${CMAKE_SOURCE_DIR}/{{ cmake.linker_script }} -L {{ cmake.linker_path }}")
+set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T ${CMAKE_SOURCE_DIR}/{{ cmake.linker_script }} -L -lc -lm{{ cmake.linker_path }}")
 
 {% for lib in cmake.libs %}
 # Load the the extern library
@@ -58,7 +64,7 @@ set ({{ lib.name }} ${CMAKE_SOURCE_DIR}/{{ lib.path }}/{{ lib.name }}.a)
 {% endfor %}
 
 # Generate the target
-add_executable (${CMAKE_PROJECT_NAME}.elf {% for src in cmake.files %} {{ '${' }}{{ src.var }}{{ '}' }} {% endfor %})
+add_executable (${CMAKE_PROJECT_NAME}.elf ${SRC_STARTUP} ${SRC_FILES})
 
 # Link the library to the target
 target_link_libraries (${CMAKE_PROJECT_NAME}.elf {% for lib in cmake.libs %} {{ lib.name }} {% endfor %})

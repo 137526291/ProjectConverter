@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" Module for converting UVPROJX project format file
-    @file
-"""
-
 import os
+import argparse
+# import cmake
+# import ewpproject
+# import uvprojxproject
 import re
 from lxml import objectify
 
@@ -29,8 +29,9 @@ class UVPROJXProject(object):
         self.project['defs'] = self.root.Targets.Target.TargetOption.TargetArmAds.Cads.VariousControls.Define.text.split(',')
         self.project['srcs'] = []
 
+        print('\n\n### start list source files. ###\n\n')
         for element in self.root.Targets.Target.Groups.getchildren():
-            print('GroupName: ' + element.GroupName.text)
+            # print('GroupName: ' + element.GroupName.text)
             if hasattr(element, 'Files'):
                 # if hasattr(element.Files.getchildren(), 'FileOption'):
                 #     print(element.Files.File.FileOption.CommonProperty.IncludeInBuild)
@@ -48,6 +49,7 @@ class UVPROJXProject(object):
                         print(s)
                         self.project['srcs'].append(s)
 
+        print('\n\n### start list include paths. ###\n\n')
         for i in range(0, len(self.project['incs'])):
             s = str(self.project['incs'][i])
             # if os.path.sep not in s:
@@ -60,9 +62,10 @@ class UVPROJXProject(object):
 
             # self.project['incs'][i] = s.replace('..', self.path, 1)
             self.project['incs'][i] = s
-
+            print(s)
+        print('\n\n')
         self.project['files'] = []
-        i = 0
+
 
         # if os.path.exists(self.path + '/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc'):
         #     for entry in os.listdir(self.path + '/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc'):
@@ -94,7 +97,7 @@ class UVPROJXProject(object):
             size = int(match_ram.group(2), 16)
             self.project['ram_size'] = size
             print("RAM Start Address:", match_ram.group(1))
-            print("Size:", match_ram.group(2))
+            print("Size:", match_ram.group(2), '= %d kB' % (size // 1024) )
         else:
             print("No match found.")
 
@@ -106,8 +109,6 @@ class UVPROJXProject(object):
             print("ROM Start Address:", start_addr)
             print("Size:", size)
 
-        
-
     def getProject(self):
         """ Return parsed project settings stored as dictionary
         @return Dictionary containing project settings
@@ -115,8 +116,55 @@ class UVPROJXProject(object):
         return self.project
 
 
+def find_file(path, fileext):
+    """ Find file with extension in path
+        @param path Root path of the project
+        @param fileext File extension to find
+        @return File name
+    """
+    filename = ''
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(fileext):
+                filename = os.path.join(root, file)
+    return filename
+
 if __name__ == '__main__':
-    print('run')
-    uv = UVPROJXProject('.', './mdk/f303.uvprojx')
-    uv.parseProject()
-    uv.displaySummary()
+    """ Parses params and calls the right conversion"""
+
+    parser = argparse.ArgumentParser()
+    # parser.add_argument("format", choices=("ewp", "uvprojx"))
+    parser.add_argument("-p", '--path', type=str, help="Root directory of project, default is current dir")
+    parser.add_argument("-f", '--file', type=str, help="file name of project like a.uvprojx")
+	#"--ewp", help="Search for *.EWP file in project structure", action='store_true')
+    #parser.add_argument("--uvprojx", help="Search for *.UPROJX file in project structure", action='store_true')
+    args = parser.parse_args()
+
+    # 如果加了 -f xx.uvprojx就是选择某个工程 否则按路径选第一个匹配扩展名
+    # 策略 直接执行就是path = '.'当前目录
+    filename = ''
+    path = ''
+    if args.file:
+        filename = args.file
+    elif args.path:
+        path = args.path
+    else:
+        path = '.'
+
+    if os.path.isdir(path):
+        print('Looking for *.uvprojx file in ' + path)
+        filename = find_file(path, '.uvprojx')
+    else:
+        print('not valid path')
+    
+    print(filename)
+    if len(filename):
+        print('Found project file: ' + filename)
+        project = UVPROJXProject(path, filename)
+        project.parseProject()
+        project.displaySummary()
+
+        # cmakefile = cmake.CMake(project.getProject(), '../')
+        # cmakefile.populateCMake()
+    else:
+        print('No project *.uvprojx file found')
